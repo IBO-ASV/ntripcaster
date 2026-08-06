@@ -1,6 +1,24 @@
 # ntripcaster
 Ntrip broadcaster written in c and libev, support windows and linux.
 
+## ROS 2 workspace build (IBO-ASV fork)
+
+This fork is an ament package. Install the Linux build dependency once, then
+build it into the current colcon workspace:
+
+```bash
+sudo apt update
+sudo apt install -y libev-dev
+git submodule update --init --recursive
+colcon build --packages-select ntripcaster
+source install/setup.bash
+ros2 pkg prefix ntripcaster
+```
+
+Only the executable and deployment config are installed under that prefix at
+`lib/ntripcaster/ntripcaster` and
+`share/ntripcaster/config/ntripcaster.json`.
+
 For now, it can now transmit data between ntrip servers and ntrip clients, with source table and authorization support.
 
 基于 libev 库实现的 C 语言版本 Ntripcaster 程序，支持 windows 和 linux。

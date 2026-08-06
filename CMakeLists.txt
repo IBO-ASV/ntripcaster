@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.8)
+cmake_policy(SET CMP0069 NEW)
 project(ntripcaster)
 set(CMAKE_C_STANDARD 99)
+
+find_package(ament_cmake REQUIRED)
 
 add_subdirectory(wsocket)
 add_subdirectory(ulog)
@@ -23,3 +26,11 @@ target_link_libraries(${PROJECT_NAME}
 )
 ENDIF()
 
+install(TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+install(FILES ntripcaster.json
+  DESTINATION share/${PROJECT_NAME}/config
+)
+
+ament_package()

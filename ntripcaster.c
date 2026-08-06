@@ -273,10 +273,12 @@ static void agent_read_cb(EV_P_ ev_io *w, int revents)
                      sizeof(agent->pending_recv) - agent->pending_idx - 1,
                      0);
 
-        if (n == WSOCKET_ERROR && wsocket_errno != WSOCKET_EWOULDBLOCK) {
-            LOG_ERROR("agent(%d) recv error, %s", agent->socket, wsocket_strerror(wsocket_errno));
-            ev_io_stop(EV_A_ &agent->io);
-            close_agent(agent);
+        if (n == WSOCKET_ERROR) {
+            if (wsocket_errno != WSOCKET_EWOULDBLOCK) {
+                LOG_ERROR("agent(%d) recv error, %s", agent->socket, wsocket_strerror(wsocket_errno));
+                ev_io_stop(EV_A_ &agent->io);
+                close_agent(agent);
+            }
             return;
         }
         if (n == 0) {
@@ -289,7 +291,7 @@ static void agent_read_cb(EV_P_ ev_io *w, int revents)
             return;
         }
         agent->last_activity = ev_now(EV_A);
-        agent->pending_idx =+ n;
+        agent->pending_idx += n;
         // check pending buffer overflow
         if (agent->pending_idx >= sizeof(agent->pending_recv) - 1) {
             LOG_ERROR("agent(%d) request buffer overflow", agent->socket);
@@ -298,6 +300,9 @@ static void agent_read_cb(EV_P_ ev_io *w, int revents)
             return;
         }
         agent->pending_recv[agent->pending_idx] = '\0';
+        if (!strstr(agent->pending_recv, "\r\n\r\n")) {
+            return;
+        }
         // test GET (ntrip client) or SOURCE (ntrip server)
         do {
             char* p = strstr(agent->pending_recv, "GET");
@@ -652,7 +657,13 @@ static cJSON* cjson_load_file(const char *file)
         return NULL;
     }
     buf[0] = '\0';
-    fread(buf, 1, len, fp);
+    const size_t bytes_read = fread(buf, 1, len, fp);
+    if (bytes_read != (size_t)len) {
+        LOG_ERROR("short read from config file '%s'", file);
+        free(buf);
+        fclose(fp);
+        return NULL;
+    }
     buf[len] = '\0';
     fclose(fp);
     cJSON *root = cJSON_Parse(buf);
@@ -694,8 +705,8 @@ static void caster_init_config(struct ntrip_caster_config *config, const char *c
         if (max_source && cJSON_IsNumber(max_source)) {
             config->MAX_SOURCE_CNT = max_source->valueint;
         }
-        if (max_pending && cJSON_IsNumber(max_source)) {
-            config->MAX_PENDING_CNT = max_source->valueint;
+        if (max_pending && cJSON_IsNumber(max_pending)) {
+            config->MAX_PENDING_CNT = max_pending->valueint;
         }
 
         // tokens
@@ -731,7 +742,7 @@ static void caster_init_config(struct ntrip_caster_config *config, const char *c
                 }
             }
         }
-        LOG_INFO("load client tokens count: %d", cnt);
+        LOG_INFO("load source tokens count: %d", cnt);
         cJSON_Delete(cfg);
     } else {
         LOG_ERROR("invalid json in config file '%s', using default setting", cfgfile);
