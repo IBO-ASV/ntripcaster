@@ -29,7 +29,7 @@ ENDIF()
 install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
-install(FILES ntripcaster.json
+install(FILES config/ntripcaster.json
   DESTINATION share/${PROJECT_NAME}/config
 )
 
