@@ -8,6 +8,6 @@
 		"test:test": "*"
 	},
 	"tokens_source": {
-		"erb": "RTCM3"
+		"osw": "RTCM3"
 	}
 }
