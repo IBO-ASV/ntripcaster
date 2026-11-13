@@ -3,13 +3,12 @@ Ntrip broadcaster written in c and libev, support windows and linux.
 
 ## ROS 2 workspace build (IBO-ASV fork)
 
-This fork is an ament package. Install the Linux build dependency once, then
-build it into the current colcon workspace:
+This fork is an ament package. Initialize its pinned nested dependencies, then
+build it into the current colcon workspace. Linux uses system `libev-dev` when
+available and otherwise builds the bundled libev statically (no sudo needed):
 
 ```bash
-sudo apt update
-sudo apt install -y libev-dev
-git submodule update --init --recursive
+git submodule update --init --recursive src/driver/gnss/ntripcaster
 colcon build --packages-select ntripcaster
 source install/setup.bash
 ros2 pkg prefix ntripcaster
